@@ -128,7 +128,7 @@ header.top .tag{color:var(--text-muted);font-size:12.5px;}
 .row{display:flex;gap:8px;}
 .row > *{flex:1;}
 .ticker-row{
-  display:grid;grid-template-columns:1fr 1.4fr 66px 30px;gap:7px;margin-bottom:7px;align-items:center;
+  display:grid;grid-template-columns:1fr 70px 30px;gap:7px;margin-bottom:7px;align-items:center;
 }
 .ticker-row input{padding:9px 9px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:13.5px;font-family:inherit;width:100%;}
 .ticker-row .rm{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:4px;}
@@ -509,20 +509,18 @@ function renderEditor(){
   root.appendChild(card);
 
   // tickers
-  var tCard = el('<div class="card"><h2>구성 종목</h2><p class="sub">티커, 종목명, 비중(%)을 입력하세요. 최소 4개, 최대 8개.</p></div>');
+  var tCard = el('<div class="card"><h2>구성 종목</h2><p class="sub">티커와 비중(%)만 입력하세요. 종목명은 가격 데이터 탭에서 자동 조회 시 채워져요. 최소 4개, 최대 8개.</p></div>');
   var rowsWrap = el('<div></div>');
   p.tickers.forEach(function(t, idx){
     var row = el('<div class="ticker-row"></div>');
-    var tickerIn = el('<input type="text" placeholder="티커">'); tickerIn.value = t.ticker;
+    var tickerIn = el('<input type="text" placeholder="티커 (예: 360750)">'); tickerIn.value = t.ticker;
     tickerIn.oninput = function(){ t.ticker = this.value.toUpperCase(); };
-    var nameIn = el('<input type="text" placeholder="종목명">'); nameIn.value = t.name;
-    nameIn.oninput = function(){ t.name = this.value; };
     var wIn = el('<input type="number" placeholder="%" step="0.1">'); wIn.value = t.weight;
     wIn.oninput = function(){ t.weight = parseFloat(this.value)||0; updateWeightTotal(); };
     var rm = el('<button type="button" class="rm">×</button>');
     rm.disabled = p.tickers.length <= 4;
     rm.onclick = function(){ p.tickers.splice(idx,1); render(); };
-    row.appendChild(tickerIn); row.appendChild(nameIn); row.appendChild(wIn); row.appendChild(rm);
+    row.appendChild(tickerIn); row.appendChild(wIn); row.appendChild(rm);
     rowsWrap.appendChild(row);
   });
   tCard.appendChild(rowsWrap);
