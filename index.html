@@ -713,6 +713,7 @@ function renderPriceTab(p){
     left.appendChild(priceIn);
 
     var autoStatus = el('<div class="status-line"></div>');
+    var statusEl; // forward ref, assigned when the history-status element is built below
     if(p.category === "domestic"){
       var autoBtn = el('<button type="button" class="btn sm" style="margin-top:8px;">⟳ 자동 조회 (현재가+과거 3년)</button>');
       autoBtn.onclick = function(){
@@ -722,14 +723,24 @@ function renderPriceTab(p){
         var today = new Date();
         var from3y = new Date(); from3y.setFullYear(today.getFullYear()-3);
         fetchPrice(t.ticker, ymd(from3y), ymd(today)).then(function(data){
-          if(data.latest) { t.price = data.latest.close; priceIn.value = t.price; }
-          if(!t.name && data.name){ t.name = data.name; }
           var monthly = dailyToMonthly(data.rows || []);
+          if(!data.latest && monthly.length===0){
+            autoStatus.textContent = "결과가 비어 있어요. 종목코드가 정확한지, ETF가 상장된 지 오래됐는지 확인해주세요.";
+            autoStatus.className = "status-line";
+            autoBtn.disabled = false;
+            return;
+          }
+          if(data.latest){ t.price = data.latest.close; priceIn.value = t.price; }
+          if(!t.name && data.name){ t.name = data.name; }
           if(monthly.length){ t.history = monthly; }
           persist();
           autoStatus.textContent = "완료: 현재가 " + fmtInt(t.price) + "원, 과거 " + monthly.length + "개월 데이터 저장됨" + (data.latest? " (기준일 "+data.latest.date+")":"");
           autoStatus.className = "status-line ok";
-          render();
+          autoBtn.disabled = false;
+          if(statusEl){
+            statusEl.textContent = t.history.length+"개월 데이터 저장됨 ("+t.history[0].month+" ~ "+t.history[t.history.length-1].month+")";
+            statusEl.className = "status-line ok";
+          }
         }).catch(function(err){
           autoStatus.textContent = "조회 실패: " + err.message + " — 백엔드가 배포/설정되지 않았다면 README를 확인하세요.";
           autoStatus.className = "status-line";
@@ -747,6 +758,7 @@ function renderPriceTab(p){
     right.appendChild(ta);
     var applyBtn = el('<button type="button" class="btn sm" style="margin-top:6px;">적용</button>');
     var status = el('<div class="status-line">'+(t.history && t.history.length ? t.history.length+"개월 데이터 저장됨 ("+t.history[0].month+" ~ "+t.history[t.history.length-1].month+")" : "저장된 데이터 없음")+'</div>');
+    statusEl = status;
     if(t.history && t.history.length) status.className = "status-line ok";
     applyBtn.onclick = function(){
       var parsed = parsePriceText(ta.value);
