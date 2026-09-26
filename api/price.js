@@ -1,14 +1,22 @@
 // /api/price?code=360750&from=20230101&to=20260918
-// 금융위원회_주식시세정보 (공공데이터포털) 프록시
+// 금융위원회_증권상품시세정보 (공공데이터포털) 프록시 - ETF/ETN/ELW 전용
 // - code: 종목 단축코드 6자리 (예: 360750, 0174B0)
 // - from, to: YYYYMMDD (생략 시 최근 1건만 조회)
 //
 // 공공데이터 특성상 실시간이 아니라 "영업일 기준 하루 뒤 오후 1시 이후" 갱신됩니다.
 // 즉 오늘 조회해도 최신값은 "어제(또는 그 이전 영업일) 종가"입니다.
+// 주의: 이 API의 endBasDt는 "미만"(exclusive) 조건이라 종료일 하루를 더해서 요청합니다.
 
-const API_BASE = "https://apis.data.go.kr/1160100/service/GetStockSecuritiesInfoService/getStockPriceInfo";
+const API_BASE = "https://apis.data.go.kr/1160100/service/GetSecuritiesProductInfoService/getETFPriceInfo";
 
-export default async function handler(req, res) {
+function addDays(yyyymmdd, days){
+  const y = +yyyymmdd.slice(0,4), m = +yyyymmdd.slice(4,6)-1, d = +yyyymmdd.slice(6,8);
+  const dt = new Date(Date.UTC(y, m, d));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return dt.toISOString().slice(0,10).replace(/-/g,"");
+}
+
+module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
 
   const { code, from, to } = req.query;
@@ -32,7 +40,7 @@ export default async function handler(req, res) {
     srtnCd: code,
   });
   if (from) params.set("beginBasDt", from);
-  if (to) params.set("endBasDt", to);
+  if (to) params.set("endBasDt", addDays(to, 1));
 
   try {
     const upstream = await fetch(`${API_BASE}?${params.toString()}`);
