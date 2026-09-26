@@ -54,11 +54,19 @@ module.exports = async function handler(req, res) {
     }
 
     const header = data?.response?.header;
+    const body = data?.response?.body;
+    const debug = {
+      resultCode: header?.resultCode,
+      resultMsg: header?.resultMsg,
+      totalCount: body?.totalCount,
+      requestedUrl: `${API_BASE}?${params.toString().replace(serviceKey, "***")}`,
+    };
+
     if (header && header.resultCode !== "00") {
-      return res.status(502).json({ error: `공공데이터포털 오류: ${header.resultMsg || header.resultCode}` });
+      return res.status(502).json({ error: `공공데이터포털 오류: ${header.resultMsg || header.resultCode}`, debug });
     }
 
-    const items = data?.response?.body?.items?.item;
+    const items = body?.items?.item;
     const arr = Array.isArray(items) ? items : items ? [items] : [];
 
     const rows = arr
@@ -79,6 +87,7 @@ module.exports = async function handler(req, res) {
       name: rows.length ? rows[rows.length - 1].name : null,
       latest: rows.length ? rows[rows.length - 1] : null,
       rows,
+      debug,
     });
   } catch (e) {
     return res.status(500).json({ error: String(e) });
