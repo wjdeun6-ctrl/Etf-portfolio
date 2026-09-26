@@ -725,7 +725,8 @@ function renderPriceTab(p){
         fetchPrice(t.ticker, ymd(from3y), ymd(today)).then(function(data){
           var monthly = dailyToMonthly(data.rows || []);
           if(!data.latest && monthly.length===0){
-            autoStatus.textContent = "결과가 비어 있어요. 종목코드가 정확한지, ETF가 상장된 지 오래됐는지 확인해주세요.";
+            var dbg = data.debug ? (" [디버그: totalCount="+data.debug.totalCount+", resultMsg="+data.debug.resultMsg+"]") : "";
+            autoStatus.textContent = "결과가 비어 있어요. 종목코드가 정확한지, ETF가 상장된 지 오래됐는지 확인해주세요." + dbg;
             autoStatus.className = "status-line";
             autoBtn.disabled = false;
             return;
