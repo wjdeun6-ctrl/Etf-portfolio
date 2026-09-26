@@ -59,7 +59,8 @@ module.exports = async function handler(req, res) {
       resultCode: header?.resultCode,
       resultMsg: header?.resultMsg,
       totalCount: body?.totalCount,
-      requestedUrl: `${API_BASE}?${params.toString().replace(serviceKey, "***")}`,
+      rawTopLevelKeys: Object.keys(data || {}),
+      rawSnippet: !header ? JSON.stringify(data).slice(0, 400) : undefined,
     };
 
     if (header && header.resultCode !== "00") {
